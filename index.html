@@ -39,12 +39,22 @@
     }
     .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
     .pt-safe { padding-top: env(safe-area-inset-top); }
+    
+    /* Animación suave para cambios de tramo */
+    .timer-alert {
+      animation: pulse-red 1s infinite;
+    }
+    @keyframes pulse-red {
+      0% { background-color: rgba(127, 29, 29, 0.4); }
+      50% { background-color: rgba(185, 28, 28, 0.6); }
+      100% { background-color: rgba(127, 29, 29, 0.4); }
+    }
   </style>
 <script type="importmap">
 {
   "imports": {
-    "react/": "https://esm.sh/react@^19.2.3/",
     "react": "https://esm.sh/react@^19.2.3",
+    "react/": "https://esm.sh/react@^19.2.3/",
     "lucide-react": "https://esm.sh/lucide-react@^0.562.0"
   }
 }
@@ -77,9 +87,6 @@
     const IconFlame = ({ size = 12, className = "", fill = "none" }) => (
       <svg width={size} height={size} viewBox="0 0 24 24" fill={fill} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.332-.224-4.218 1.149-5.716C12.418 1.97 14.773 2.5 15.655 5c.783 2.22-1.298 3.504-1.155 5.5.093 1.3.652 2.373 1.134 2.879 1.137 1.192 2.366 1.127 2.366 1.127A8 8 0 1 1 9 5.539c0 .736.334 2.126.826 3.037.195.362.536.637.77.924a2.502 2.502 0 0 1 .581 1.776z"/></svg>
     );
-    const IconZap = ({ size = 12, className = "", fill = "none" }) => (
-      <svg width={size} height={size} viewBox="0 0 24 24" fill={fill} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-    );
     const IconPlay = ({ size = 24, fill = "none" }) => (
       <svg width={size} height={size} viewBox="0 0 24 24" fill={fill} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
     );
@@ -97,6 +104,9 @@
     );
     const IconRuler = ({ size = 16 }) => (
       <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+    );
+    const IconTrash = ({ size = 16 }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
     );
 
     // --- SERVICIOS ---
@@ -129,16 +139,25 @@
     const calculateSessionStats = (segments) => {
       let totalCalories = 0;
       let intensitySum = 0;
+      let totalDist = 0;
+      let totalElev = 0;
+
       segments.forEach(s => {
         const speedMetersPerMin = (s.speed * 1000) / 60;
         const mets = (0.1 * speedMetersPerMin + 1.8 * speedMetersPerMin * (s.incline / 100) + 3.5) / 3.5;
         totalCalories += mets * 75 * (s.duration / 3600);
         intensitySum += (s.speed * 0.6 + s.incline * 0.4) * (s.duration / 60);
+        
+        const dist = (s.speed * 1000 / 3600) * s.duration;
+        totalDist += dist;
+        totalElev += dist * (s.incline / 100);
       });
       const avg = intensitySum / (segments.reduce((acc, s) => acc + s.duration, 0) / 60 || 1);
       return { 
         calories: Math.round(totalCalories), 
-        fatBurnLevel: avg > 8 ? 5 : avg > 6 ? 4 : avg > 4 ? 3 : avg > 2 ? 2 : 1 
+        fatBurnLevel: avg > 8 ? 5 : avg > 6 ? 4 : avg > 4 ? 3 : avg > 2 ? 2 : 1,
+        totalDistanceKm: (totalDist / 1000).toFixed(2),
+        totalElevationM: Math.round(totalElev)
       };
     };
 
@@ -189,14 +208,17 @@
       );
     };
 
-    const NumericInput = ({ label, value, onChange, max, step = "1" }) => (
+    const NumericInput = ({ label, value, onChange, max, min = 0, step = "1" }) => (
       <div className="flex flex-col">
-        <label className="text-[10px] uppercase text-slate-500 font-bold mb-1 text-center">{label}</label>
+        <label className="text-[10px] uppercase text-slate-500 font-bold mb-1 text-center truncate">{label}</label>
         <input 
           type="number" step={step} value={value}
           onChange={(e) => {
             const val = parseFloat(e.target.value) || 0;
-            onChange(max ? Math.min(max, val) : val);
+            let finalVal = val;
+            if (max !== undefined) finalVal = Math.min(max, finalVal);
+            if (min !== undefined) finalVal = Math.max(min, finalVal);
+            onChange(finalVal);
           }}
           className="bg-slate-900 text-white p-2 rounded border border-slate-700 focus:border-emerald-500 outline-none w-full text-center font-mono font-bold"
         />
@@ -209,7 +231,6 @@
       const [totalElapsed, setTotalElapsed] = useState(0);
       const [isActive, setIsActive] = useState(true);
       
-      // Métricas acumuladas en tiempo real
       const [distanceMeters, setDistanceMeters] = useState(0);
       const [elevationGain, setElevationGain] = useState(0);
 
@@ -222,8 +243,8 @@
           timer = setInterval(() => {
             const current = session.segments[idx];
             
-            // Cálculo por segundo (distancia y desnivel)
-            const speedMS = (current.speed * 1000) / 3600; // m/s
+            // Cálculo por segundo real
+            const speedMS = (current.speed * 1000) / 3600; 
             const deltaDist = speedMS * 1; 
             const deltaElev = deltaDist * (current.incline / 100);
 
@@ -233,10 +254,10 @@
             setTimeLeft(prev => {
               if (prev <= 1) {
                 if (idx < session.segments.length - 1) {
-                  const next = idx + 1;
-                  setIdx(next);
+                  const nextIdx = idx + 1;
+                  setIdx(nextIdx);
                   audioService.beep(1200, 500);
-                  return session.segments[next].duration;
+                  return session.segments[nextIdx].duration;
                 } else {
                   setIsActive(false);
                   onFinish();
@@ -256,9 +277,9 @@
       const next = session.segments[idx + 1];
 
       return (
-        <div className={`fixed inset-0 z-50 transition-colors ${isAlarming ? 'bg-red-950/80' : 'bg-slate-900'}`}>
-          <div className="max-w-md mx-auto h-full flex flex-col p-6 overflow-y-auto">
-            <header className="flex justify-between items-center mb-6 pt-safe">
+        <div className={`fixed inset-0 z-50 transition-colors ${isAlarming ? 'timer-alert' : 'bg-slate-900'}`}>
+          <div className="max-w-md mx-auto h-full flex flex-col p-6 overflow-y-auto pt-safe pb-safe">
+            <header className="flex justify-between items-center mb-6">
               <div>
                 <h2 className="text-xl font-black text-white">{session.name}</h2>
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-tighter">Tramo {idx + 1} de {session.segments.length}</p>
@@ -269,18 +290,18 @@
             <div className="mb-6 grid grid-cols-2 gap-4">
                <div className="flex flex-col items-center bg-slate-800/40 p-3 rounded-2xl border border-slate-700/50">
                   <span className="text-[9px] uppercase font-black text-slate-500 mb-1 flex items-center gap-1"><IconRuler size={10}/> Distancia</span>
-                  <span className="text-2xl font-black font-mono text-emerald-400">{(distanceMeters/1000).toFixed(2)} <small className="text-xs">km</small></span>
+                  <span className="text-2xl font-black font-mono text-emerald-400">{(distanceMeters/1000).toFixed(2)} <small className="text-xs font-normal">km</small></span>
                </div>
                <div className="flex flex-col items-center bg-slate-800/40 p-3 rounded-2xl border border-slate-700/50">
                   <span className="text-[9px] uppercase font-black text-slate-500 mb-1 flex items-center gap-1"><IconMountain size={10}/> Desnivel +</span>
-                  <span className="text-2xl font-black font-mono text-orange-400">+{elevationGain.toFixed(1)} <small className="text-xs">m</small></span>
+                  <span className="text-2xl font-black font-mono text-orange-400">+{elevationGain.toFixed(1)} <small className="text-xs font-normal">m</small></span>
                </div>
             </div>
 
             <div className="mb-6 flex flex-col gap-6">
               <TimerDisplay seconds={Math.max(0, totalDuration - totalElapsed)} label="Restante Total" size="sm" color="text-emerald-400" />
-              <div className={`p-8 rounded-3xl border-4 transition-all flex items-center justify-center ${isAlarming ? 'border-red-500 bg-red-500/10 scale-105 shadow-[0_0_30px_rgba(239,68,68,0.3)]' : 'border-slate-800 bg-slate-800/50'}`}>
-                <TimerDisplay seconds={timeLeft} label="Próximo cambio en..." />
+              <div className={`p-8 rounded-3xl border-4 transition-all flex items-center justify-center ${isAlarming ? 'border-red-500 bg-red-500/10 scale-105' : 'border-slate-800 bg-slate-800/50'}`}>
+                <TimerDisplay seconds={timeLeft} label="Siguiente cambio en..." />
               </div>
             </div>
 
@@ -288,12 +309,12 @@
               <div className="bg-slate-800 p-4 rounded-2xl border border-slate-700 text-center relative overflow-hidden">
                 <div className="absolute top-0 left-0 w-1 h-full bg-blue-500 opacity-50"></div>
                 <span className="text-[10px] text-slate-500 uppercase font-black block mb-1">Velocidad</span>
-                <span className="text-4xl font-black text-blue-400">{current.speed}<small className="text-xs ml-1">km/h</small></span>
+                <span className="text-4xl font-black text-blue-400">{current.speed}<small className="text-xs ml-1 font-normal">km/h</small></span>
               </div>
               <div className="bg-slate-800 p-4 rounded-2xl border border-slate-700 text-center relative overflow-hidden">
                 <div className="absolute top-0 left-0 w-1 h-full bg-orange-500 opacity-50"></div>
                 <span className="text-[10px] text-slate-500 uppercase font-black block mb-1">Inclinación</span>
-                <span className="text-4xl font-black text-orange-400">{current.incline}<small className="text-xs ml-1">%</small></span>
+                <span className="text-4xl font-black text-orange-400">{current.incline}<small className="text-xs ml-1 font-normal">%</small></span>
               </div>
             </div>
 
@@ -301,16 +322,16 @@
 
             <div className="p-4 bg-slate-800/80 rounded-2xl border border-dashed border-slate-700 flex items-center justify-between mb-8">
                <div className="flex flex-col">
-                  <span className="text-[9px] text-slate-500 font-black uppercase">Próximo Cambio</span>
+                  <span className="text-[9px] text-slate-500 font-black uppercase tracking-widest mb-1">Próximo Cambio</span>
                   <span className="text-sm font-bold text-slate-300">
-                    {next ? `${next.speed} km/h • ${next.incline}% incl.` : "¡Último tramo!"}
+                    {next ? `${next.speed} km/h • ${next.incline}% incl.` : "¡Enfriamiento final!"}
                   </span>
                </div>
                <IconChevronRight className="text-slate-600" size={16} />
             </div>
 
-            <div className="mt-auto flex justify-center gap-10 pb-10">
-              <button onClick={() => setIsActive(!isActive)} className={`w-20 h-20 rounded-full flex items-center justify-center ${isActive ? 'bg-slate-800 text-white' : 'bg-emerald-500 text-slate-900 shadow-xl shadow-emerald-500/20'}`}>
+            <div className="mt-auto flex justify-center gap-10 pb-6">
+              <button onClick={() => setIsActive(!isActive)} className={`w-20 h-20 rounded-full flex items-center justify-center transition-all ${isActive ? 'bg-slate-800 text-white' : 'bg-emerald-500 text-slate-900 shadow-xl shadow-emerald-500/20'}`}>
                 {isActive ? <IconPause fill="currentColor" /> : <IconPlay fill="currentColor" />}
               </button>
               <button onClick={() => { if(idx < session.segments.length -1) { setIdx(idx + 1); setTimeLeft(session.segments[idx+1].duration); } else onFinish(); }} className="w-20 h-20 rounded-full bg-slate-800 text-slate-400 border border-slate-700 flex items-center justify-center">
@@ -326,8 +347,31 @@
       const [edited, setEdited] = useState({...session, segments: [...session.segments]});
       const stats = calculateSessionStats(edited.segments);
 
+      const updateSegment = (i, updates) => {
+        const segs = [...edited.segments];
+        segs[i] = { ...segs[i], ...updates };
+        setEdited({...edited, segments: segs});
+      };
+
+      const addSegment = () => {
+        const last = edited.segments[edited.segments.length - 1];
+        const newSeg = { 
+          id: Date.now().toString(), 
+          duration: last?.duration || 300, 
+          speed: last?.speed || 5, 
+          incline: last?.incline || 0 
+        };
+        setEdited({...edited, segments: [...edited.segments, newSeg]});
+      };
+
+      const removeSegment = (i) => {
+        if (edited.segments.length <= 1) return;
+        const segs = edited.segments.filter((_, idx) => idx !== i);
+        setEdited({...edited, segments: segs});
+      };
+
       return (
-        <div className="max-w-md mx-auto p-6 pb-32">
+        <div className="max-w-md mx-auto p-6 pb-32 pt-safe">
           <div className="flex items-center gap-4 mb-6">
             <button onClick={onBack} className="p-2 text-slate-500"><IconChevronRight className="rotate-180" /></button>
             <h1 className="text-2xl font-black">Configurar</h1>
@@ -340,10 +384,12 @@
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="bg-slate-900/50 p-3 rounded-xl text-center border border-slate-700/50">
+                <span className="text-[9px] text-slate-500 uppercase font-black block mb-1">Gasto Est.</span>
                 <span className="text-xl font-bold text-orange-400">{stats.calories} <small className="text-[10px]">KCAL</small></span>
               </div>
               <div className="bg-slate-900/50 p-3 rounded-xl text-center border border-slate-700/50">
-                <div className="flex justify-center gap-0.5">
+                <span className="text-[9px] text-slate-500 uppercase font-black block mb-1">Intensidad</span>
+                <div className="flex justify-center gap-0.5 mt-1">
                   {[1,2,3,4,5].map(i => <IconFlame key={i} size={10} className={i <= stats.fatBurnLevel ? 'text-orange-500' : 'text-slate-700'} fill={i <= stats.fatBurnLevel ? 'currentColor' : 'none'} />)}
                 </div>
               </div>
@@ -352,16 +398,50 @@
 
           <div className="space-y-4">
             {edited.segments.map((s, i) => (
-              <div key={s.id} className="bg-slate-800/40 p-4 rounded-2xl border border-slate-800">
-                <div className="flex justify-between mb-3"><span className="text-[10px] font-black text-slate-600 uppercase">Tramo {i+1}</span></div>
-                <div className="grid grid-cols-3 gap-3">
-                  <NumericInput label="MIN" value={Math.floor(s.duration / 60)} onChange={m => { const segs = [...edited.segments]; segs[i].duration = (m*60) + (s.duration%60); setEdited({...edited, segments: segs}); }} />
-                  <NumericInput label="KM/H" step="0.1" value={s.speed} onChange={v => { const segs = [...edited.segments]; segs[i].speed = v; setEdited({...edited, segments: segs}); }} max={15} />
-                  <NumericInput label="% INC" value={s.incline} onChange={v => { const segs = [...edited.segments]; segs[i].incline = v; setEdited({...edited, segments: segs}); }} max={15} />
+              <div key={i} className="bg-slate-800/40 p-4 rounded-2xl border border-slate-800">
+                <div className="flex justify-between mb-3">
+                  <span className="text-[10px] font-black text-slate-600 uppercase">Tramo {i+1}</span>
+                  <button onClick={() => removeSegment(i)} className="text-slate-600 active:text-red-500"><IconTrash size={14} /></button>
+                </div>
+                <div className="grid grid-cols-4 gap-2">
+                  <NumericInput 
+                    label="MIN" 
+                    value={Math.floor(s.duration / 60)} 
+                    onChange={m => { 
+                      const currentSecs = s.duration % 60;
+                      updateSegment(i, { duration: (m * 60) + currentSecs });
+                    }} 
+                  />
+                  <NumericInput 
+                    label="SEG" 
+                    value={s.duration % 60} 
+                    max={59}
+                    onChange={sec => { 
+                      const currentMins = Math.floor(s.duration / 60);
+                      updateSegment(i, { duration: (currentMins * 60) + sec });
+                    }} 
+                  />
+                  <NumericInput 
+                    label="KM/H" 
+                    step="0.1" 
+                    value={s.speed} 
+                    onChange={v => updateSegment(i, { speed: v })} 
+                    max={15} 
+                  />
+                  <NumericInput 
+                    label="% INC" 
+                    value={s.incline} 
+                    onChange={v => updateSegment(i, { incline: v })} 
+                    max={15} 
+                  />
                 </div>
               </div>
             ))}
           </div>
+
+          <button onClick={addSegment} className="mt-6 w-full py-4 border-2 border-dashed border-slate-700 rounded-2xl text-slate-500 font-bold flex items-center justify-center gap-2 active:bg-slate-800 transition-colors">
+            <IconPlus size={20} /> Añadir Tramo
+          </button>
 
           <div className="fixed bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-slate-900 via-slate-900 to-transparent">
             <button onClick={() => onStart(edited)} className="w-full max-w-md mx-auto bg-emerald-500 text-slate-900 py-5 rounded-2xl font-black text-xl shadow-xl active:scale-95 transition-all flex items-center justify-center gap-3">
@@ -378,17 +458,53 @@
       const [session, setSession] = useState(null);
 
       const DEFAULT_SESSIONS = [
-        { id: 'hiit', name: 'HIIT GONZALO', description: 'Entrenamiento de intervalos piramidales.', segments: [{ id: '1', duration: 300, speed: 4, incline: 5 }, { id: '2', duration: 360, speed: 5, incline: 8 }, { id: '3', duration: 360, speed: 5, incline: 12 }, { id: '4', duration: 360, speed: 4, incline: 15 }, { id: '5', duration: 600, speed: 3, incline: 2 }] },
-        { id: 'fat', name: 'QUEMA GRASA', description: 'Intensidad constante en zona aeróbica.', segments: [{ id: 'f1', duration: 600, speed: 5.5, incline: 2 }, { id: 'f2', duration: 600, speed: 6, incline: 3 }, { id: 'f3', duration: 600, speed: 5, incline: 1 }] }
+        { 
+          id: 'hiit_gonzalo', 
+          name: 'HIIT GONZALO', 
+          description: 'Pirámide de intensidad con escalada progresiva y enfriamiento detallado.', 
+          segments: [
+            { id: '1', duration: 300, speed: 3.5, incline: 5 },
+            { id: '2', duration: 360, speed: 4.5, incline: 8 },
+            { id: '3', duration: 360, speed: 4.5, incline: 11 },
+            { id: '4', duration: 360, speed: 4.5, incline: 9 },
+            { id: '5', duration: 360, speed: 4.5, incline: 12 },
+            { id: '6', duration: 60, speed: 4.5, incline: 13 },
+            { id: '7', duration: 60, speed: 4.5, incline: 14 },
+            { id: '8', duration: 60, speed: 4.5, incline: 15 },
+            { id: '9', duration: 30, speed: 4, incline: 14 },
+            { id: '10', duration: 30, speed: 4, incline: 13 },
+            { id: '11', duration: 30, speed: 4, incline: 12 },
+            { id: '12', duration: 30, speed: 4, incline: 11 },
+            { id: '13', duration: 30, speed: 4, incline: 10 },
+            { id: '14', duration: 30, speed: 4, incline: 9 },
+            { id: '15', duration: 30, speed: 4, incline: 8 },
+            { id: '16', duration: 30, speed: 4, incline: 7 },
+            { id: '17', duration: 30, speed: 4, incline: 6 },
+            { id: '18', duration: 30, speed: 3.5, incline: 5 },
+            { id: '19', duration: 30, speed: 3.5, incline: 4 },
+            { id: '20', duration: 30, speed: 3, incline: 3 },
+            { id: '21', duration: 60, speed: 2, incline: 2 }
+          ] 
+        },
+        { 
+          id: 'fat_burn', 
+          name: 'QUEMA GRASA', 
+          description: 'Intensidad moderada constante para optimizar oxidación lipídica.', 
+          segments: [
+            { id: 'f1', duration: 600, speed: 5.5, incline: 2 }, 
+            { id: 'f2', duration: 600, speed: 6, incline: 3 }, 
+            { id: 'f3', duration: 600, speed: 5, incline: 1 }
+          ] 
+        }
       ];
 
       const start = () => audioService.resume().catch(console.error);
 
       return (
-        <div className="min-h-screen pb-20" onClick={start}>
+        <div className="min-h-screen pb-20 pt-safe" onClick={start}>
           {view === 'HOME' && (
             <div className="max-w-md mx-auto p-6">
-              <header className="py-12 pt-safe">
+              <header className="py-12">
                 <h1 className="text-4xl font-black tracking-tighter flex items-center gap-2">
                   <IconActivity className="text-emerald-500" size={36} /> TreadPro
                 </h1>
@@ -398,14 +514,14 @@
               <div className="grid gap-4">
                 {DEFAULT_SESSIONS.map(s => (
                   <button key={s.id} onClick={() => { setSession(s); setView('SETUP'); start(); }} className="bg-slate-800 p-6 rounded-3xl border border-slate-700 text-left flex items-center justify-between group active:scale-95 transition-all">
-                    <div>
+                    <div className="flex-1 pr-4">
                       <h3 className="text-xl font-black mb-1 group-active:text-emerald-400">{s.name}</h3>
-                      <p className="text-sm text-slate-500 line-clamp-1">{s.description}</p>
+                      <p className="text-xs text-slate-500 line-clamp-2">{s.description}</p>
                     </div>
                     <IconChevronRight className="text-slate-600 group-active:text-emerald-400" />
                   </button>
                 ))}
-                <button onClick={() => { setSession({...DEFAULT_SESSIONS[0], name: 'PERSONALIZADA', id: Date.now()}); setView('SETUP'); start(); }} className="mt-4 border-2 border-dashed border-slate-700 p-6 rounded-3xl flex items-center justify-center gap-3 text-slate-500 hover:text-emerald-500 hover:border-emerald-500/50 transition-all">
+                <button onClick={() => { setSession({...DEFAULT_SESSIONS[0], name: 'PERSONALIZADA', id: Date.now(), segments: [{ id: 'custom-1', duration: 300, speed: 5, incline: 0 }] }); setView('SETUP'); start(); }} className="mt-4 border-2 border-dashed border-slate-700 p-6 rounded-3xl flex items-center justify-center gap-3 text-slate-500 hover:text-emerald-500 hover:border-emerald-500/50 transition-all active:scale-95">
                   <IconPlus /> <span className="font-bold">NUEVA SESIÓN</span>
                 </button>
               </div>
@@ -416,12 +532,24 @@
           {view === 'ACTIVE' && session && <WorkoutRunner session={session} onCancel={() => setView('HOME')} onFinish={() => setView('SUMMARY')} />}
 
           {view === 'SUMMARY' && (
-            <div className="fixed inset-0 bg-slate-900 z-[100] flex items-center justify-center p-8 text-center">
-              <div className="max-w-sm">
-                <div className="w-24 h-24 bg-emerald-500 text-slate-900 rounded-full flex items-center justify-center mx-auto mb-6 shadow-2xl"><IconActivity size={48} /></div>
-                <h2 className="text-3xl font-black mb-4 uppercase tracking-tighter">¡Entrenamiento Finalizado!</h2>
-                <p className="text-slate-400 mb-10">Has completado todos los tramos de la sesión.</p>
-                <button onClick={() => setView('HOME')} className="w-full bg-white text-slate-900 py-5 rounded-2xl font-black text-xl shadow-xl">VOLVER AL INICIO</button>
+            <div className="fixed inset-0 bg-slate-900 z-[100] flex items-center justify-center p-8 text-center pb-safe pt-safe">
+              <div className="max-w-sm w-full">
+                <div className="w-24 h-24 bg-emerald-500 text-slate-900 rounded-full flex items-center justify-center mx-auto mb-8 shadow-[0_0_50px_rgba(16,185,129,0.3)]"><IconActivity size={48} /></div>
+                <h2 className="text-3xl font-black mb-4 uppercase tracking-tighter">¡LOGRADO!</h2>
+                <p className="text-slate-400 mb-10">Entrenamiento completado satisfactoriamente.</p>
+                
+                <div className="grid grid-cols-2 gap-4 mb-10">
+                   <div className="bg-slate-800 p-5 rounded-2xl border border-slate-700">
+                      <span className="text-[10px] text-slate-500 font-bold block uppercase mb-1">Calorías</span>
+                      <span className="text-2xl font-black text-white">{calculateSessionStats(session.segments).calories}</span>
+                   </div>
+                   <div className="bg-slate-800 p-5 rounded-2xl border border-slate-700">
+                      <span className="text-[10px] text-slate-500 font-bold block uppercase mb-1">Distancia</span>
+                      <span className="text-2xl font-black text-white">{calculateSessionStats(session.segments).totalDistanceKm}km</span>
+                   </div>
+                </div>
+
+                <button onClick={() => setView('HOME')} className="w-full bg-white text-slate-900 py-5 rounded-2xl font-black text-xl shadow-xl active:scale-95 transition-transform">VOLVER AL INICIO</button>
               </div>
             </div>
           )}
