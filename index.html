@@ -469,13 +469,37 @@
           ] 
         },
         { 
-          id: 'fat_burn', 
-          name: 'QUEMA GRASA', 
-          description: 'Intensidad moderada constante para optimizar oxidación lipídica.', 
+          id: 'quema_grasa_pro', 
+          name: 'QUEMA GRASA PRO', 
+          description: 'Optimización de oxidación de grasas con alta inclinación y velocidad controlada.', 
           segments: [
-            { id: 'f1', duration: 600, speed: 5.5, incline: 2 }, 
-            { id: 'f2', duration: 600, speed: 6, incline: 3 }, 
-            { id: 'f3', duration: 600, speed: 5, incline: 1 }
+            { id: 'qg1', duration: 300, speed: 4, incline: 5 }, // 5 min
+            { id: 'qg2', duration: 600, speed: 5, incline: 10 }, // 10 min
+            { id: 'qg3', duration: 600, speed: 5, incline: 12 }, // 10 min
+            { id: 'qg4', duration: 600, speed: 5, incline: 11 }, // 10 min
+            { id: 'qg5', duration: 300, speed: 3.5, incline: 4 } // 5 min
+          ] // Total: 40 min, Cals: ~350 kcal
+        },
+        { 
+          id: 'montana_activa', 
+          name: 'MONTAÑA ACTIVA', 
+          description: 'Simulación de senderismo intenso con pendientes pronunciadas.', 
+          segments: [
+            { id: 'ma1', duration: 600, speed: 4.5, incline: 8 }, // 10 min
+            { id: 'ma2', duration: 600, speed: 4.5, incline: 13 }, // 10 min
+            { id: 'ma3', duration: 600, speed: 4.5, incline: 15 }, // 10 min
+            { id: 'ma4', duration: 600, speed: 4.5, incline: 11 }, // 10 min
+            { id: 'ma5', duration: 300, speed: 3, incline: 5 } // 5 min
+          ] // Total: 45 min, Cals: ~420 kcal
+        },
+        { 
+          id: 'fat_burn_basic', 
+          name: 'FAT BURN SOFT', 
+          description: 'Intervalos moderados constantes para principiantes.', 
+          segments: [
+            { id: 'f1', duration: 600, speed: 4.5, incline: 2 }, 
+            { id: 'f2', duration: 600, speed: 5, incline: 3 }, 
+            { id: 'f3', duration: 600, speed: 4.5, incline: 1 }
           ] 
         }
       ];

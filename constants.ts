@@ -35,15 +35,27 @@ export const DEFAULT_SESSIONS: Session[] = [
     ]
   },
   {
-    id: 'fat-burn',
-    name: 'Quema Grasas',
-    description: 'Intervalos constantes para optimizar la oxidación de grasas.',
+    id: 'quema-grasa-pro',
+    name: 'QUEMA GRASA PRO',
+    description: 'Alta inclinación y velocidad constante para máxima oxidación calórica en 40 min.',
     segments: [
-      { id: '1', duration: 300, speed: 5, incline: 1 },
-      { id: '2', duration: 300, speed: 6, incline: 2 },
-      { id: '3', duration: 300, speed: 6.5, incline: 3 },
-      { id: '4', duration: 300, speed: 6, incline: 2 },
-      { id: '5', duration: 300, speed: 5, incline: 1 },
+      { id: 'qg1', duration: 300, speed: 4, incline: 5 },
+      { id: 'qg2', duration: 600, speed: 5, incline: 10 },
+      { id: 'qg3', duration: 600, speed: 5, incline: 12 },
+      { id: 'qg4', duration: 600, speed: 5, incline: 11 },
+      { id: 'qg5', duration: 300, speed: 3.5, incline: 4 },
+    ]
+  },
+  {
+    id: 'montana-activa',
+    name: 'MONTAÑA ACTIVA',
+    description: 'Simulación de trekking con pendientes de hasta el 15%. Gran gasto calórico.',
+    segments: [
+      { id: 'ma1', duration: 600, speed: 4.5, incline: 8 },
+      { id: 'ma2', duration: 600, speed: 4.5, incline: 13 },
+      { id: 'ma3', duration: 600, speed: 4.5, incline: 15 },
+      { id: 'ma4', duration: 600, speed: 4.5, incline: 11 },
+      { id: 'ma5', duration: 300, speed: 3, incline: 5 },
     ]
   },
   {
@@ -58,18 +70,6 @@ export const DEFAULT_SESSIONS: Session[] = [
       { id: 'h5', duration: 60, speed: 4, incline: 0 },
       { id: 'h6', duration: 60, speed: 14, incline: 2 },
       { id: 'h7', duration: 180, speed: 3, incline: 0 },
-    ]
-  },
-  {
-    id: 'hill-climber',
-    name: 'Escalada Progresiva',
-    description: 'Enfoque en inclinación para fortalecer tren inferior.',
-    segments: [
-      { id: 'c1', duration: 240, speed: 5, incline: 2 },
-      { id: 'c2', duration: 240, speed: 5, incline: 5 },
-      { id: 'c3', duration: 240, speed: 5, incline: 8 },
-      { id: 'c4', duration: 240, speed: 4.5, incline: 12 },
-      { id: 'c5', duration: 240, speed: 5, incline: 5 },
     ]
   }
 ];
