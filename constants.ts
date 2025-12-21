@@ -35,6 +35,30 @@ export const DEFAULT_SESSIONS: Session[] = [
     ]
   },
   {
+    id: 'super-trekking',
+    name: 'SUPER TREKKING',
+    description: 'Máxima quema calórica manteniendo paso firme y pendientes de montaña.',
+    segments: [
+      { id: 'st1', duration: 300, speed: 4.0, incline: 6 },
+      { id: 'st2', duration: 900, speed: 5.0, incline: 12 },
+      { id: 'st3', duration: 600, speed: 4.8, incline: 15 },
+      { id: 'st4', duration: 900, speed: 5.0, incline: 11 },
+      { id: 'st5', duration: 300, speed: 4.0, incline: 5 }
+    ]
+  },
+  {
+    id: 'potencia-vertical',
+    name: 'POTENCIA VERTICAL',
+    description: 'Resistencia en pendiente pronunciada para superar las 450 Kcal sin correr.',
+    segments: [
+      { id: 'pv1', duration: 300, speed: 4.5, incline: 8 },
+      { id: 'pv2', duration: 1200, speed: 5.0, incline: 13 },
+      { id: 'pv3', duration: 1200, speed: 5.0, incline: 14 },
+      { id: 'pv4', duration: 600, speed: 4.5, incline: 9 },
+      { id: 'pv5', duration: 180, speed: 3.0, incline: 3 }
+    ]
+  },
+  {
     id: 'quema-grasa-pro',
     name: 'QUEMA GRASA PRO',
     description: 'Alta inclinación y velocidad constante para máxima oxidación calórica en 40 min.',

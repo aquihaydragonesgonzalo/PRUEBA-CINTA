@@ -391,7 +391,7 @@
       return (
         <div className="max-w-md mx-auto p-6 pb-32 pt-safe">
           <div className="flex items-center gap-4 mb-6">
-            <button onClick={onBack} className="p-2 text-slate-500"><IconChevronRight className="rotate-180" /></button>
+            <button onClick={onBack} className="p-2 text-slate-400 hover:text-white"><IconChevronRight className="rotate-180" /></button>
             <h1 className="text-2xl font-black">Configurar</h1>
           </div>
 
@@ -482,6 +482,30 @@
             { id: '20', duration: 30, speed: 3, incline: 3 },
             { id: '21', duration: 60, speed: 2, incline: 2 }
           ] 
+        },
+        { 
+          id: 'super_trekking', 
+          name: 'SUPER TREKKING', 
+          description: 'Máxima quema calórica manteniendo paso firme y pendientes de montaña.', 
+          segments: [
+            { id: 'st1', duration: 300, speed: 4.0, incline: 6 },
+            { id: 'st2', duration: 900, speed: 5.0, incline: 12 },
+            { id: 'st3', duration: 600, speed: 4.8, incline: 15 },
+            { id: 'st4', duration: 900, speed: 5.0, incline: 11 },
+            { id: 'st5', duration: 300, speed: 4.0, incline: 5 }
+          ] // 50 min
+        },
+        { 
+          id: 'potencia_vertical', 
+          name: 'POTENCIA VERTICAL', 
+          description: 'Resistencia en pendiente pronunciada para superar las 450 Kcal sin correr.', 
+          segments: [
+            { id: 'pv1', duration: 300, speed: 4.5, incline: 8 },
+            { id: 'pv2', duration: 1200, speed: 5.0, incline: 13 },
+            { id: 'pv3', duration: 1200, speed: 5.0, incline: 14 },
+            { id: 'pv4', duration: 600, speed: 4.5, incline: 9 },
+            { id: 'pv5', duration: 180, speed: 3.0, incline: 3 }
+          ] // 58 min
         },
         { 
           id: 'quema_grasa_pro', 
